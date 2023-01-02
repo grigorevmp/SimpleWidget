@@ -171,14 +171,14 @@ class MainActivity : AppCompatActivity() {
     private fun showErrorState() {
         binding.warnImage.visibility = View.VISIBLE
         binding.warnText.visibility = View.VISIBLE
-        binding.imageView.visibility = View.INVISIBLE
+        binding.ivImagePreview.visibility = View.INVISIBLE
         binding.tvTextMonth.visibility = View.GONE
         binding.tvTextDay.visibility = View.GONE
     }
 
     private fun showLoadingState() {
         binding.tvLoading.visibility = View.VISIBLE
-        binding.imageView.visibility = View.INVISIBLE
+        binding.ivImagePreview.visibility = View.INVISIBLE
         binding.warnImage.visibility = View.GONE
         binding.warnText.visibility = View.GONE
         binding.tvTextMonth.visibility = View.GONE
@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showFinalState() {
         binding.tvLoading.visibility = View.GONE
-        binding.imageView.visibility = View.VISIBLE
+        binding.ivImagePreview.visibility = View.VISIBLE
         binding.warnImage.visibility = View.GONE
         binding.warnText.visibility = View.GONE
         binding.tvTextMonth.visibility = View.VISIBLE
@@ -235,7 +235,7 @@ class MainActivity : AppCompatActivity() {
                     })
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .placeholder(getProgressBar())
-                    .into(binding.imageView)
+                    .into(binding.ivImagePreview)
             }
         })
     }
@@ -281,7 +281,7 @@ class MainActivity : AppCompatActivity() {
                     })
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .placeholder(getProgressBar())
-                    .into(binding.imageView)
+                    .into(binding.ivImagePreview)
             }
         })
     }
