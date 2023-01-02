@@ -10,6 +10,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.CalendarContract
+import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable
@@ -78,12 +79,12 @@ class BaseWidget : AppWidgetProvider() {
         circularProgressDrawable.centerRadius = 30f
         circularProgressDrawable.start()
 
-        val appWidgetTarget = AppWidgetTarget(context, R.id.imageView, views, appWidgetId)
+        val appWidgetTarget = AppWidgetTarget(context, R.id.ivImagePreview, views, appWidgetId)
 
         views.setViewVisibility(R.id.pbLoading, View.GONE)
-        views.setViewVisibility(R.id.imageView, View.VISIBLE)
+        views.setViewVisibility(R.id.ivImagePreview, View.VISIBLE)
 
-        Glide.with(context.applicationContext)
+        Glide.with(context)
             .asBitmap()
             .load(Utils.getUrl())
             .listener(object : RequestListener<Bitmap> {
@@ -169,12 +170,15 @@ class BaseWidget : AppWidgetProvider() {
         context: Context?, intent: Intent,
         appWidgetManager: AppWidgetManager, isDog: Boolean
     ) {
+        val context = context ?: return
+
         if (isDog) {
             val dogImageService = DogImageService()
 
-            dogImageService.getPicture(context!!.applicationContext)
+            dogImageService.getPicture(context.applicationContext)
                 .enqueue(object : Callback<DogImageDto> {
                     override fun onFailure(call: Call<DogImageDto>, t: Throwable) {
+                        Log.e("dogImageService", "can't connect to the server")
                     }
 
                     override fun onResponse(
@@ -197,9 +201,10 @@ class BaseWidget : AppWidgetProvider() {
         } else {
             val catImageService = CatImageService()
 
-            catImageService.getPicture(context!!.applicationContext)
+            catImageService.getPicture(context.applicationContext)
                 .enqueue(object : Callback<CatImageDto> {
                     override fun onFailure(call: Call<CatImageDto>, t: Throwable) {
+                        Log.e("dogImageService", "can't connect to the server")
                     }
 
                     override fun onResponse(

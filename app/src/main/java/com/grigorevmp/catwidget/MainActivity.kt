@@ -209,7 +209,7 @@ class MainActivity : AppCompatActivity() {
                 showFinalState()
                 response.body()?.file?.let { Utils.setUrl(it) }
 
-                Glide.with(this@MainActivity)
+                Glide.with(applicationContext)
                     .load(response.body()?.file)
                     .listener(object : RequestListener<Drawable> {
                         override fun onLoadFailed(
@@ -254,7 +254,7 @@ class MainActivity : AppCompatActivity() {
 
                 response.body()?.message?.let { Utils.setUrl(it) }
 
-                Glide.with(this@MainActivity)
+                Glide.with(applicationContext)
                     .asDrawable()
                     .load(response.body()?.message)
                     .listener(object : RequestListener<Drawable> {
