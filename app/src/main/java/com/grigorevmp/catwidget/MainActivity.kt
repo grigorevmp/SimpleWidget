@@ -1,11 +1,19 @@
 package com.grigorevmp.catwidget
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ContextThemeWrapper
+import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
@@ -13,6 +21,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.grigorevmp.catwidget.data.network.anime.AnimeImageService
 import com.grigorevmp.catwidget.data.network.cat.CatImageService
 import com.grigorevmp.catwidget.data.network.dog.DogImageService
 import com.grigorevmp.catwidget.databinding.ActivityMainBinding
@@ -31,8 +40,14 @@ class MainActivity : AppCompatActivity() {
 
     private val catImageService = CatImageService()
     private val dogImageService = DogImageService()
+    private val animeImageService = AnimeImageService()
 
     private lateinit var binding: ActivityMainBinding
+
+    companion object {
+        const val UNSCALED_ICON_SIZE = 0.7f
+        const val SCALED_ICON_SIZE = 1f
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,11 +61,11 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun scaleView(view: View, hide: Boolean = false) {
-        if (hide) {
-            view.animate().scaleX(0.7f).scaleY(0.7f)
+    private fun scaleView(view: View, unscaled: Boolean = false) {
+        if (unscaled) {
+            view.animate().scaleX(UNSCALED_ICON_SIZE).scaleY(UNSCALED_ICON_SIZE)
         } else {
-            view.animate().scaleX(1f).scaleY(1f)
+            view.animate().scaleX(SCALED_ICON_SIZE).scaleY(SCALED_ICON_SIZE)
         }
     }
 
@@ -73,12 +88,24 @@ class MainActivity : AppCompatActivity() {
             binding.tvDesc.text = getString(R.string.reload_desc_2)
         }
 
-        if (Utils.getAnimal() == "dog") {
-            scaleView(binding.cvCat, true)
-            scaleView(binding.cvDog)
-        } else {
-            scaleView(binding.cvCat)
-            scaleView(binding.cvDog, true)
+        when (Utils.getImageType()) {
+            ImageTypeEnum.Anime.type -> {
+                scaleView(binding.cvDog, true)
+                scaleView(binding.cvCat, true)
+                scaleView(binding.cvAnime)
+            }
+
+            ImageTypeEnum.Dog.type -> {
+                scaleView(binding.cvAnime, true)
+                scaleView(binding.cvCat, true)
+                scaleView(binding.cvDog)
+            }
+
+            ImageTypeEnum.Cat.type -> {
+                scaleView(binding.cvAnime, true)
+                scaleView(binding.cvDog, true)
+                scaleView(binding.cvCat)
+            }
         }
 
         binding.sOpenCalendar.setOnClickListener {
@@ -97,16 +124,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.cvCat.setOnClickListener {
-            scaleView(binding.cvCat)
             scaleView(binding.cvDog, true)
-            Utils.setAnimal(ImageTypeEnum.Cat.type)
+            scaleView(binding.cvAnime, true)
+            scaleView(binding.cvCat)
+            Utils.setImageType(ImageTypeEnum.Cat.type)
             reloadResolver()
         }
 
         binding.cvDog.setOnClickListener {
             scaleView(binding.cvCat, true)
+            scaleView(binding.cvAnime, true)
             scaleView(binding.cvDog)
-            Utils.setAnimal(ImageTypeEnum.Dog.type)
+            Utils.setImageType(ImageTypeEnum.Dog.type)
+            reloadResolver()
+        }
+
+        binding.cvAnime.setOnClickListener {
+            scaleView(binding.cvCat, true)
+            scaleView(binding.cvDog, true)
+            scaleView(binding.cvAnime)
+            Utils.setImageType(ImageTypeEnum.Anime.type)
             reloadResolver()
         }
 
@@ -129,14 +166,77 @@ class MainActivity : AppCompatActivity() {
                 binding.tvDesc.text = getString(R.string.reload_desc_1)
             }
         }
+
+        binding.cRestricted.isChecked =
+            Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type
+
+        binding.cRestricted.setOnCheckedChangeListener { _, isChecked ->
+            Utils.setAnimeType(
+                if (isChecked) {
+                    reloadResolver()
+                    AnimeImageService.AnimeTypeEnum.NSFW.type
+                } else {
+                    reloadResolver()
+                    AnimeImageService.AnimeTypeEnum.SFW.type
+                }
+            )
+        }
+
+        binding.cCategory.setOnClickListener {
+            showSortDialog(applicationContext)
+        }
+    }
+
+    private fun showSortDialog(context: Context) {
+        val options = if (Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type) {
+            AnimeImageService.ImageNsfwCategory.getValuesNames()
+        } else {
+            AnimeImageService.ImageSfwCategory.getValuesNames()
+        }
+
+        val builder = AlertDialog.Builder(this, R.style.MultiChoiceAlertDialog)
+        val view = layoutInflater.inflate(R.layout.dialog_custom, null, false)
+        val radioGroup = view.findViewById<RadioGroup>(R.id.radiogroup)
+
+        val purpleColor = ContextCompat.getColor(context, R.color.purple_700)
+        val radioStyle = ContextThemeWrapper(radioGroup.context, R.style.MyRadioButton)
+        for (option in options) {
+            val radioButton = RadioButton(radioStyle)
+            radioButton.text = option
+            radioGroup.addView(radioButton)
+        }
+        radioGroup.setOnCheckedChangeListener { group, checkedId ->
+            for (child in radioGroup.children) {
+                child as RadioButton
+                if (child.id == checkedId) {
+                    child.setTextColor(purpleColor)
+                    if (Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type)
+                        Utils.setAnimeRestrictedCategory(child.text.toString())
+                    else
+                        Utils.setAnimeCategory(child.text.toString())
+                } else {
+                    child.setTextColor(Color.BLACK)
+                }
+            }
+            reloadResolver()
+        }
+        builder.setView(view)
+        builder.show()
     }
 
     private fun reloadResolver() {
+        showState(StateEnum.Loading)
+
         CoroutineScope(SupervisorJob()).launch {
-            when (Utils.getAnimal()) {
+            when (Utils.getImageType()) {
                 ImageTypeEnum.Dog.type -> getDog()
                 ImageTypeEnum.Cat.type -> getCat()
-                else -> getCat()
+                ImageTypeEnum.Anime.type ->
+                    Utils.getAnimeType()?.let { type ->
+                        Utils.getAnimeRestrictedCategory()?.let { category ->
+                            getAnime(type, category)
+                        }
+                    }
             }
         }
     }
@@ -167,11 +267,11 @@ class MainActivity : AppCompatActivity() {
         return circularProgressDrawable
     }
 
-    private fun showState(state: StateEnum) {
+    private fun showState(state: StateEnum, mode: ImageTypeEnum = ImageTypeEnum.Cat) {
         when (state) {
             StateEnum.Error -> showErrorState()
             StateEnum.Loading -> showLoadingState()
-            StateEnum.Success -> showSuccessState()
+            StateEnum.Success -> showSuccessState(mode)
         }
     }
 
@@ -193,7 +293,7 @@ class MainActivity : AppCompatActivity() {
         binding.tvLoading.visibility = View.VISIBLE
     }
 
-    private fun showSuccessState() {
+    private fun showSuccessState(mode: ImageTypeEnum) {
         binding.pbLoading.hide()
         binding.tvLoading.visibility = View.GONE
         binding.warnImage.visibility = View.GONE
@@ -201,13 +301,21 @@ class MainActivity : AppCompatActivity() {
         binding.ivImagePreview.visibility = View.VISIBLE
         binding.tvTextMonth.visibility = View.VISIBLE
         binding.tvTextDay.visibility = View.VISIBLE
+
+        when (mode) {
+            ImageTypeEnum.Anime -> {
+                binding.cCategory.visibility = View.VISIBLE
+                binding.cRestricted.visibility = View.VISIBLE
+            }
+
+            else -> {
+                binding.cCategory.visibility = View.GONE
+                binding.cRestricted.visibility = View.GONE
+            }
+        }
     }
 
     private suspend fun getCat() {
-        withContext(Dispatchers.Main) {
-            showState(StateEnum.Loading)
-        }
-
         catImageService.getPicture(this).flowOn(Dispatchers.IO).catch { _ ->
             withContext(Dispatchers.Main) {
                 showState(StateEnum.Error)
@@ -216,17 +324,13 @@ class MainActivity : AppCompatActivity() {
             Utils.setUrl(it.file)
 
             withContext(Dispatchers.Main) {
-                showState(StateEnum.Success)
+                showState(StateEnum.Success, ImageTypeEnum.Cat)
                 setImage(it.file)
             }
         }
     }
 
     private suspend fun getDog() {
-        withContext(Dispatchers.Main) {
-            showState(StateEnum.Loading)
-        }
-
         dogImageService.getPicture(this).flowOn(Dispatchers.IO).catch { e ->
             withContext(Dispatchers.Main) {
                 showState(StateEnum.Error)
@@ -235,8 +339,26 @@ class MainActivity : AppCompatActivity() {
             Utils.setUrl(it.message)
 
             withContext(Dispatchers.Main) {
-                showState(StateEnum.Success)
+                showState(StateEnum.Success, ImageTypeEnum.Dog)
                 setImage(it.message)
+            }
+        }
+    }
+
+    private suspend fun getAnime(
+        type: String = "sfw",
+        category: String = "waifu"
+    ) {
+        animeImageService.getCustomPicture(this, type, category).flowOn(Dispatchers.IO).catch { _ ->
+            withContext(Dispatchers.Main) {
+                showState(StateEnum.Error)
+            }
+        }.collect {
+            Utils.setUrl(it.url)
+
+            withContext(Dispatchers.Main) {
+                showState(StateEnum.Success, ImageTypeEnum.Anime)
+                setImage(it.url)
             }
         }
     }
@@ -269,15 +391,12 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     enum class ImageTypeEnum(val type: String) {
-        Cat("cat"),
-        Dog("dog")
+        Cat("cat"), Dog("dog"), Anime("anime"),
     }
 
 
-
-    enum class StateEnum() {
+    enum class StateEnum {
         Error, Loading, Success
     }
 }

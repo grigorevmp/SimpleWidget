@@ -21,32 +21,24 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.AppWidgetTarget
 import com.bumptech.glide.request.target.Target
 import com.grigorevmp.catwidget.R
-import com.grigorevmp.catwidget.data.dto.image.CatImageDto
-import com.grigorevmp.catwidget.data.dto.image.DogImageDto
 import com.grigorevmp.catwidget.data.network.cat.CatImageService
 import com.grigorevmp.catwidget.data.network.dog.DogImageService
 import com.grigorevmp.catwidget.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.coroutines.CoroutineContext
 
 
 class BaseWidget : AppWidgetProvider() {
 
-    val dogImageService = DogImageService()
-    val catImageService = CatImageService()
+    private val dogImageService = DogImageService()
+    private val catImageService = CatImageService()
 
     override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
         super.onRestored(context, oldWidgetIds, newWidgetIds)
@@ -238,7 +230,7 @@ class BaseWidget : AppWidgetProvider() {
         val appWidgetManager = AppWidgetManager.getInstance(context)
 
         if (intent.action == "FULL_UPDATE") {
-            callUpdate(context, intent, appWidgetManager, Utils.getAnimal() == "dog")
+            callUpdate(context, intent, appWidgetManager, Utils.getImageType() == "dog")
         } else if (intent.action == "LOCAL_UPDATE") {
             if (Utils.getCalendar()) {
                 val calendarUri = CalendarContract.CONTENT_URI

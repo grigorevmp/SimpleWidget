@@ -22,4 +22,5 @@
     <string name="also_try_my_other_app">Попробуй мой менеджер паролей:</string>
     <string name="open_calendar_on_tap">Открывать календарь при нажатии</string>
     <string name="image_preview">Cat or dog image preview</string>
+    <string name="category">Категории</string>
 </resources>
