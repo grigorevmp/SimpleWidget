@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import com.bumptech.glide.Glide
@@ -14,15 +13,17 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
-import com.grigorevmp.catwidget.data.dto.CatImageDto
-import com.grigorevmp.catwidget.data.dto.DogImageDto
-import com.grigorevmp.catwidget.data.network.CatImageService
-import com.grigorevmp.catwidget.data.network.DogImageService
+import com.grigorevmp.catwidget.data.network.cat.CatImageService
+import com.grigorevmp.catwidget.data.network.dog.DogImageService
 import com.grigorevmp.catwidget.databinding.ActivityMainBinding
 import com.grigorevmp.catwidget.utils.Utils
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -83,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         binding.sOpenCalendar.setOnClickListener {
             Utils.setCalendar(binding.sOpenCalendar.isChecked)
 
-            if(binding.sOpenCalendar.isChecked){
+            if (binding.sOpenCalendar.isChecked) {
                 Utils.setReload(false)
                 binding.sReload.isChecked = false
                 binding.tvDesc.visibility = View.GONE
@@ -98,14 +99,14 @@ class MainActivity : AppCompatActivity() {
         binding.cvCat.setOnClickListener {
             scaleView(binding.cvCat)
             scaleView(binding.cvDog, true)
-            Utils.setAnimal("cat")
+            Utils.setAnimal(ImageTypeEnum.Cat.type)
             reloadResolver()
         }
 
         binding.cvDog.setOnClickListener {
             scaleView(binding.cvCat, true)
             scaleView(binding.cvDog)
-            Utils.setAnimal("dog")
+            Utils.setAnimal(ImageTypeEnum.Dog.type)
             reloadResolver()
         }
 
@@ -115,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.sReload.setOnCheckedChangeListener { _, _ ->
-            if(binding.sReload.isChecked){
+            if (binding.sReload.isChecked) {
                 Utils.setCalendar(false)
                 binding.sOpenCalendar.isChecked = false
             }
@@ -131,32 +132,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun reloadResolver() {
-        if (Utils.getAnimal() == "dog") {
-            getDog()
-        } else {
-            getCat()
+        CoroutineScope(SupervisorJob()).launch {
+            when (Utils.getAnimal()) {
+                ImageTypeEnum.Dog.type -> getDog()
+                ImageTypeEnum.Cat.type -> getCat()
+                else -> getCat()
+            }
         }
     }
 
     private fun initDate(isFullMonth: Boolean = false) {
-        val dayText = findViewById<TextView>(R.id.tvTextDay)
-        val monthText = findViewById<TextView>(R.id.tvTextMonth)
-
-        dayText.text = getDay()
-        monthText.text = getMonth(isFullMonth)
+        binding.tvTextDay.text = getDay()
+        binding.tvTextMonth.text = getMonth(isFullMonth)
     }
 
     @SuppressLint("SimpleDateFormat")
-    fun getDay(): String {
+    private fun getDay(): String {
         val sdf = SimpleDateFormat("dd")
         return sdf.format(Date())
     }
 
     @SuppressLint("SimpleDateFormat")
-    fun getMonth(isFullMonth: Boolean): String {
-        val sdf =
-            if (isFullMonth) SimpleDateFormat("LLLL")
-            else SimpleDateFormat("MMM")
+    private fun getMonth(isFullMonth: Boolean): String {
+        val sdf = if (isFullMonth) SimpleDateFormat("LLLL")
+        else SimpleDateFormat("MMM")
         return sdf.format(Date())
     }
 
@@ -168,121 +167,117 @@ class MainActivity : AppCompatActivity() {
         return circularProgressDrawable
     }
 
+    private fun showState(state: StateEnum) {
+        when (state) {
+            StateEnum.Error -> showErrorState()
+            StateEnum.Loading -> showLoadingState()
+            StateEnum.Success -> showSuccessState()
+        }
+    }
+
     private fun showErrorState() {
-        binding.warnImage.visibility = View.VISIBLE
-        binding.warnText.visibility = View.VISIBLE
-        binding.ivImagePreview.visibility = View.INVISIBLE
         binding.tvTextMonth.visibility = View.GONE
         binding.tvTextDay.visibility = View.GONE
+        binding.ivImagePreview.visibility = View.INVISIBLE
+        binding.warnImage.visibility = View.VISIBLE
+        binding.warnText.visibility = View.VISIBLE
     }
 
     private fun showLoadingState() {
-        binding.tvLoading.visibility = View.VISIBLE
+        binding.pbLoading.show()
         binding.ivImagePreview.visibility = View.INVISIBLE
         binding.warnImage.visibility = View.GONE
         binding.warnText.visibility = View.GONE
         binding.tvTextMonth.visibility = View.GONE
         binding.tvTextDay.visibility = View.GONE
-        binding.pbLoading.show()
+        binding.tvLoading.visibility = View.VISIBLE
     }
 
-    private fun showFinalState() {
+    private fun showSuccessState() {
+        binding.pbLoading.hide()
         binding.tvLoading.visibility = View.GONE
-        binding.ivImagePreview.visibility = View.VISIBLE
         binding.warnImage.visibility = View.GONE
         binding.warnText.visibility = View.GONE
+        binding.ivImagePreview.visibility = View.VISIBLE
         binding.tvTextMonth.visibility = View.VISIBLE
         binding.tvTextDay.visibility = View.VISIBLE
-        binding.pbLoading.hide()
     }
 
-    private fun getCat() {
-        showLoadingState()
+    private suspend fun getCat() {
+        withContext(Dispatchers.Main) {
+            showState(StateEnum.Loading)
+        }
 
-        catImageService.getPicture(this).enqueue(object : Callback<CatImageDto> {
-            override fun onFailure(call: Call<CatImageDto>, t: Throwable) {
-                showErrorState()
+        catImageService.getPicture(this).flowOn(Dispatchers.IO).catch { _ ->
+            withContext(Dispatchers.Main) {
+                showState(StateEnum.Error)
             }
+        }.collect {
+            Utils.setUrl(it.file)
 
-
-            override fun onResponse(call: Call<CatImageDto>, response: Response<CatImageDto>) {
-                showFinalState()
-                response.body()?.file?.let { Utils.setUrl(it) }
-
-                Glide.with(applicationContext)
-                    .load(response.body()?.file)
-                    .listener(object : RequestListener<Drawable> {
-                        override fun onLoadFailed(
-                            e: GlideException?,
-                            model: Any?,
-                            target: Target<Drawable>?,
-                            isFirstResource: Boolean
-                        ): Boolean {
-                            showErrorState()
-                            return false
-                        }
-
-                        override fun onResourceReady(
-                            resource: Drawable?,
-                            model: Any?,
-                            target: Target<Drawable>?,
-                            dataSource: DataSource?,
-                            isFirstResource: Boolean
-                        ): Boolean {
-                            return false
-                        }
-
-                    })
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .placeholder(getProgressBar())
-                    .into(binding.ivImagePreview)
+            withContext(Dispatchers.Main) {
+                showState(StateEnum.Success)
+                setImage(it.file)
             }
-        })
+        }
     }
 
-    private fun getDog() {
-        showLoadingState()
+    private suspend fun getDog() {
+        withContext(Dispatchers.Main) {
+            showState(StateEnum.Loading)
+        }
 
-        dogImageService.getPicture(this).enqueue(object : Callback<DogImageDto> {
-            override fun onFailure(call: Call<DogImageDto>, t: Throwable) {
-                showErrorState()
+        dogImageService.getPicture(this).flowOn(Dispatchers.IO).catch { e ->
+            withContext(Dispatchers.Main) {
+                showState(StateEnum.Error)
             }
+        }.collect {
+            Utils.setUrl(it.message)
 
-
-            override fun onResponse(call: Call<DogImageDto>, response: Response<DogImageDto>) {
-                showFinalState()
-
-                response.body()?.message?.let { Utils.setUrl(it) }
-
-                Glide.with(applicationContext)
-                    .asDrawable()
-                    .load(response.body()?.message)
-                    .listener(object : RequestListener<Drawable> {
-                        override fun onLoadFailed(
-                            e: GlideException?,
-                            model: Any?,
-                            target: Target<Drawable>?,
-                            isFirstResource: Boolean
-                        ): Boolean {
-                            showErrorState()
-                            return false
-                        }
-
-                        override fun onResourceReady(
-                            resource: Drawable?,
-                            model: Any?,
-                            target: Target<Drawable>?,
-                            dataSource: DataSource?,
-                            isFirstResource: Boolean
-                        ): Boolean {
-                            return false
-                        }
-
-                    })
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .placeholder(getProgressBar())
-                    .into(binding.ivImagePreview)
+            withContext(Dispatchers.Main) {
+                showState(StateEnum.Success)
+                setImage(it.message)
             }
-        })
+        }
+    }
+
+    private fun setImage(imageUrl: String) {
+        Glide.with(applicationContext).asDrawable().load(imageUrl)
+            .listener(object : RequestListener<Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<Drawable>?,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    showState(StateEnum.Error)
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: Drawable?,
+                    model: Any?,
+                    target: Target<Drawable>?,
+                    dataSource: DataSource?,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    return false
+                }
+
+            }).diskCacheStrategy(DiskCacheStrategy.ALL).placeholder(getProgressBar())
+            .into(binding.ivImagePreview)
+    }
+
+
+
+    enum class ImageTypeEnum(val type: String) {
+        Cat("cat"),
+        Dog("dog")
+    }
+
+
+
+    enum class StateEnum() {
+        Error, Loading, Success
     }
 }

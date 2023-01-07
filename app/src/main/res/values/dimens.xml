@@ -10,4 +10,8 @@
     <dimen name="fragment_title">24sp</dimen>
     <dimen name="medium_margin">30dp</dimen>
     <dimen name="small_margin">10dp</dimen>
+    <dimen name="text_base_margin">10dp</dimen>
+    <dimen name="text_size_big">36sp</dimen>
+    <dimen name="text_size_medium">18sp</dimen>
+    <dimen name="progress_bar_horizontal_margin">90dp</dimen>
 </resources>

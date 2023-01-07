@@ -21,19 +21,32 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.AppWidgetTarget
 import com.bumptech.glide.request.target.Target
 import com.grigorevmp.catwidget.R
-import com.grigorevmp.catwidget.data.dto.CatImageDto
-import com.grigorevmp.catwidget.data.dto.DogImageDto
-import com.grigorevmp.catwidget.data.network.CatImageService
-import com.grigorevmp.catwidget.data.network.DogImageService
+import com.grigorevmp.catwidget.data.dto.image.CatImageDto
+import com.grigorevmp.catwidget.data.dto.image.DogImageDto
+import com.grigorevmp.catwidget.data.network.cat.CatImageService
+import com.grigorevmp.catwidget.data.network.dog.DogImageService
 import com.grigorevmp.catwidget.utils.Utils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 
 
 class BaseWidget : AppWidgetProvider() {
+
+    val dogImageService = DogImageService()
+    val catImageService = CatImageService()
 
     override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
         super.onRestored(context, oldWidgetIds, newWidgetIds)
@@ -168,63 +181,54 @@ class BaseWidget : AppWidgetProvider() {
 
     private fun callUpdate(
         context: Context?, intent: Intent,
-        appWidgetManager: AppWidgetManager, isDog: Boolean
+        appWidgetManager: AppWidgetManager,
+        isDog: Boolean
     ) {
-        val context = context ?: return
+        val currentContext = context ?: return
+        val extras = intent.extras
+        val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID)
 
-        if (isDog) {
-            val dogImageService = DogImageService()
+        CoroutineScope(SupervisorJob()).launch {
 
-            dogImageService.getPicture(context.applicationContext)
-                .enqueue(object : Callback<DogImageDto> {
-                    override fun onFailure(call: Call<DogImageDto>, t: Throwable) {
-                        Log.e("dogImageService", "can't connect to the server")
+            if (isDog) {
+                dogImageService.getPicture(currentContext.applicationContext)
+                    .flowOn(Dispatchers.IO)
+                    .catch { e ->
+                        Log.e("GetDogImageUseCase", "Can't connect to the server")
                     }
-
-                    override fun onResponse(
-                        call: Call<DogImageDto>,
-                        response: Response<DogImageDto>
-                    ) {
-                        response.body()?.message?.let { Utils.setUrl(it) }
-                        val extras = intent.extras
-                        val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID)
+                    .collect {
+                        Utils.setUrl(it.message)
 
                         if (appWidgetId != null) {
-                            updateAppWidget(
-                                context,
-                                appWidgetManager,
-                                appWidgetId
-                            )
+                            withContext(Dispatchers.Main) {
+                                updateAppWidget(
+                                    currentContext,
+                                    appWidgetManager,
+                                    appWidgetId
+                                )
+                            }
                         }
                     }
-                })
-        } else {
-            val catImageService = CatImageService()
-
-            catImageService.getPicture(context.applicationContext)
-                .enqueue(object : Callback<CatImageDto> {
-                    override fun onFailure(call: Call<CatImageDto>, t: Throwable) {
-                        Log.e("dogImageService", "can't connect to the server")
+            } else {
+                catImageService.getPicture(currentContext.applicationContext)
+                    .flowOn(Dispatchers.IO)
+                    .catch { e ->
+                        Log.e("CatImageService", "Can't connect to the server")
                     }
-
-                    override fun onResponse(
-                        call: Call<CatImageDto>,
-                        response: Response<CatImageDto>
-                    ) {
-                        response.body()?.file?.let { Utils.setUrl(it) }
-
-                        val extras = intent.extras
-                        val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID)
+                    .collect {
+                        Utils.setUrl(it.file)
 
                         if (appWidgetId != null) {
-                            updateAppWidget(
-                                context,
-                                appWidgetManager,
-                                appWidgetId
-                            )
+                            withContext(Dispatchers.Main) {
+                                updateAppWidget(
+                                    currentContext,
+                                    appWidgetManager,
+                                    appWidgetId
+                                )
+                            }
                         }
                     }
-                })
+            }
         }
     }
 

@@ -21,4 +21,5 @@
     <string name="syncing">Syncing with app</string>
     <string name="also_try_my_other_app">Also try my password manager:</string>
     <string name="open_calendar_on_tap">Open calendar on tap</string>
+    <string name="image_preview">Cat or dog image preview</string>
 </resources>
