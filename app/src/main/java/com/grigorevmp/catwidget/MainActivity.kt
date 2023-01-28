@@ -3,17 +3,10 @@ package com.grigorevmp.catwidget
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
-import android.widget.RadioButton
-import android.widget.RadioGroup
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.ContextThemeWrapper
-import androidx.core.content.ContextCompat
-import androidx.core.view.children
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
@@ -21,6 +14,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.grigorevmp.catwidget.data.network.anime.AnimeImageService
 import com.grigorevmp.catwidget.data.network.cat.CatImageService
 import com.grigorevmp.catwidget.data.network.dog.DogImageService
@@ -35,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -58,7 +53,6 @@ class MainActivity : AppCompatActivity() {
         reloadResolver()
         initDate(Utils.getMonthLong())
         initListeners()
-
     }
 
     private fun scaleView(view: View, unscaled: Boolean = false) {
@@ -80,7 +74,6 @@ class MainActivity : AppCompatActivity() {
         if (Utils.getCalendar()) {
             binding.sOpenCalendar.isChecked = true
             binding.sReload.isChecked = false
-            binding.tvDesc.visibility = View.GONE
             Utils.setReload(false)
         }
 
@@ -114,7 +107,6 @@ class MainActivity : AppCompatActivity() {
             if (binding.sOpenCalendar.isChecked) {
                 Utils.setReload(false)
                 binding.sReload.isChecked = false
-                binding.tvDesc.visibility = View.GONE
             }
         }
 
@@ -158,7 +150,6 @@ class MainActivity : AppCompatActivity() {
                 binding.sOpenCalendar.isChecked = false
             }
 
-            binding.tvDesc.visibility = View.VISIBLE
             Utils.setReload(binding.sReload.isChecked)
             if (binding.sReload.isChecked) {
                 binding.tvDesc.text = getString(R.string.reload_desc_2)
@@ -188,40 +179,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSortDialog(context: Context) {
-        val options = if (Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type) {
-            AnimeImageService.ImageNsfwCategory.getValuesNames()
+        val options: Array<CharSequence> = if (Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type) {
+            AnimeImageService.ImageNsfwCategory.getValuesNames().toTypedArray()
         } else {
-            AnimeImageService.ImageSfwCategory.getValuesNames()
+            AnimeImageService.ImageSfwCategory.getValuesNames().toTypedArray()
         }
 
-        val builder = AlertDialog.Builder(this, R.style.MultiChoiceAlertDialog)
-        val view = layoutInflater.inflate(R.layout.dialog_custom, null, false)
-        val radioGroup = view.findViewById<RadioGroup>(R.id.radiogroup)
+        val selectedId = options.indexOf(Utils.getAnimeCategory() as CharSequence)
 
-        val purpleColor = ContextCompat.getColor(context, R.color.purple_700)
-        val radioStyle = ContextThemeWrapper(radioGroup.context, R.style.MyRadioButton)
-        for (option in options) {
-            val radioButton = RadioButton(radioStyle)
-            radioButton.text = option
-            radioGroup.addView(radioButton)
-        }
-        radioGroup.setOnCheckedChangeListener { group, checkedId ->
-            for (child in radioGroup.children) {
-                child as RadioButton
-                if (child.id == checkedId) {
-                    child.setTextColor(purpleColor)
-                    if (Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type)
-                        Utils.setAnimeRestrictedCategory(child.text.toString())
-                    else
-                        Utils.setAnimeCategory(child.text.toString())
-                } else {
-                    child.setTextColor(Color.BLACK)
-                }
-            }
+        val builder2 = MaterialAlertDialogBuilder(this@MainActivity)
+        builder2.setTitle(R.string.anime_categories)
+        builder2.setSingleChoiceItems(options, selectedId) { dialog, which ->
+            if (Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type)
+                Utils.setAnimeRestrictedCategory(options[which].toString())
+            else
+                Utils.setAnimeCategory(options[which].toString())
             reloadResolver()
+            dialog.cancel()
         }
-        builder.setView(view)
-        builder.show()
+
+        builder2.setNegativeButton(getString(R.string.dismiss)) { dialog, _ -> dialog.dismiss() }
+        builder2.setCancelable(true)
+        builder2.show()
     }
 
     private fun reloadResolver() {
@@ -249,14 +228,13 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SimpleDateFormat")
     private fun getDay(): String {
         val sdf = SimpleDateFormat("dd")
-        return sdf.format(Date())
+        return sdf.format(Date()).capitalized()
     }
 
     @SuppressLint("SimpleDateFormat")
     private fun getMonth(isFullMonth: Boolean): String {
-        val sdf = if (isFullMonth) SimpleDateFormat("LLLL")
-        else SimpleDateFormat("MMM")
-        return sdf.format(Date())
+        val sdf = if (isFullMonth) SimpleDateFormat("LLLL") else SimpleDateFormat("MMM")
+        return sdf.format(Date()).capitalize(Locale.ROOT)
     }
 
     private fun getProgressBar(): CircularProgressDrawable {
@@ -305,7 +283,7 @@ class MainActivity : AppCompatActivity() {
         when (mode) {
             ImageTypeEnum.Anime -> {
                 binding.cCategory.visibility = View.VISIBLE
-                binding.cRestricted.visibility = View.VISIBLE
+                if (BuildConfig.showRestrictedContent) { binding.cRestricted.visibility = View.VISIBLE }
             }
 
             else -> {
@@ -391,12 +369,26 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
     enum class ImageTypeEnum(val type: String) {
         Cat("cat"), Dog("dog"), Anime("anime"),
     }
 
 
+
     enum class StateEnum {
         Error, Loading, Success
+    }
+
+
+
+    // Extensions
+
+    fun String.capitalized(): String {
+        return this.replaceFirstChar {
+            if (it.isLowerCase())
+                it.titlecase(Locale.getDefault())
+            else it.toString()
+        }
     }
 }

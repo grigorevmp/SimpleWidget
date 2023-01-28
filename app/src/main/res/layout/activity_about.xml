@@ -6,17 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".AboutActivity">
 
-
-    <ImageView
-        android:id="@+id/quickPass"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginTop="20dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tryAlso"
-        app:srcCompat="@drawable/quickpass_promo" />
-
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
@@ -59,16 +48,14 @@
         app:layout_constraintTop_toBottomOf="@+id/dogApi" />
 
     <TextView
-        android:id="@+id/tryAlso"
+        android:id="@+id/animeApi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
-        android:textSize="18sp"
-        android:text="@string/also_try_my_other_app"
+        android:layout_marginTop="10dp"
+        android:text="@string/created_with_aws_random_anime"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/catApi" />
-
+        app:layout_constraintTop_toBottomOf="@+id/catApi" />
 
     <LinearLayout
         android:id="@+id/llLinks"

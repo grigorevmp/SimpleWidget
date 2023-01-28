@@ -1,13 +1,11 @@
 <resources>
-    <string name="app_name">CatWidget</string>
+    <string name="app_name">SimpleWidget</string>
     <string name="cat_calendar_widget">Just calendar widget</string>
     <string name="one_cute_cat_a_day">Get doze of cute picture</string>
     <string name="meow">Meow</string>
     <string name="created_with_aws_random_cat">Cat API: Images from \"aws.random.cat\"</string>
     <string name="created_with_aws_random_dog">Dog API: Images from \"dog.ceo\"</string>
-    <string name="searching_for_a_cat"> for a doze of a cat…</string>
-    <string name="searching_for_a_dog">Searching for a doze of a dog…</string>
-    <string name="dog_lover">Dog lovers mod</string>
+    <string name="created_with_aws_random_anime">Anime API: Images from \"api.waifu.pics\"</string>
     <string name="use_full_month">Show full month</string>
     <string name="random">Random</string>
     <string name="i_need_more_time_to_load_cats">I need more time…</string>
@@ -24,4 +22,6 @@
     <string name="image_preview">Cat or dog image preview</string>
     <string name="category">Categories</string>
     <string name="restricted" translatable="false">18+</string>
+    <string name="anime_categories">Anime categories</string>
+    <string name="dismiss">Dismiss</string>
 </resources>

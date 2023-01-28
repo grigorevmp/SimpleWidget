@@ -3,6 +3,7 @@ package com.grigorevmp.catwidget.utils
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import com.grigorevmp.catwidget.BuildConfig
 import com.grigorevmp.catwidget.data.network.anime.AnimeImageService
 
 object Utils {
@@ -85,7 +86,10 @@ object Utils {
     fun getMonthLong() = sharedPreferences!!.getBoolean("prefMonth", false)
     fun getReload() = sharedPreferences!!.getBoolean("prefReload", false)
     fun getCalendar() = sharedPreferences!!.getBoolean("prefCalendar", false)
-    fun getAnimeType() = sharedPreferences!!.getString("prefAnimeType", AnimeImageService.AnimeTypeEnum.SFW.type)
+    fun getAnimeType(): String? {
+        return if (BuildConfig.showRestrictedContent) sharedPreferences!!.getString("prefAnimeType", AnimeImageService.AnimeTypeEnum.SFW.type)
+        else AnimeImageService.AnimeTypeEnum.SFW.type
+    }
 
     fun getAnimeCategory() = sharedPreferences!!.getString(
         "prefAnimeCategory",

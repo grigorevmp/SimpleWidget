@@ -7,9 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.grigorevmp.catwidget.databinding.ActivityAboutBinding
 
 const val authorTelegramLink = "https://t.me/grigorevmp"
-const val authorGitHubLink = "https://github.com/grigorevmp/QuickPass-Mobile-Password-manager"
-const val quickPass =
-    "https://play.google.com/store/apps/details?id=com.mikhailgrigorev.quickpassword"
+const val authorGitHubLink = "https://github.com/grigorevmp"
 
 class AboutActivity : AppCompatActivity() {
 
@@ -23,17 +21,12 @@ class AboutActivity : AppCompatActivity() {
 
 
         binding.ivTelegram.setOnClickListener {
-            val i = Intent(Intent.ACTION_VIEW, Uri.parse(authorTelegramLink))
+            val i = Intent(Intent.ACTION_VIEW, Uri.parse(authorTelegramLink)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(i)
         }
 
         binding.cvGitHub.setOnClickListener {
-            val i = Intent(Intent.ACTION_VIEW, Uri.parse(authorGitHubLink))
-            startActivity(i)
-        }
-
-        binding.quickPass.setOnClickListener {
-            val i = Intent(Intent.ACTION_VIEW, Uri.parse(quickPass))
+            val i = Intent(Intent.ACTION_VIEW, Uri.parse(authorGitHubLink)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(i)
         }
     }

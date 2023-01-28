@@ -48,7 +48,7 @@ class AnimeImageService : BaseImageService<AnimeImageDto>(
 
         val service = loader.create(AnimeImageApi::class.java)
 
-        val animeCategory = when (Utils.getAnimeType()) {
+        val animeCategory = when (type) {
             AnimeTypeEnum.SFW.type -> Utils.getAnimeCategory()
             AnimeTypeEnum.NSFW.type -> Utils.getAnimeRestrictedCategory()
             else -> Utils.getAnimeCategory()

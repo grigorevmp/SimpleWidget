@@ -14,4 +14,7 @@
     <dimen name="text_size_big">36sp</dimen>
     <dimen name="text_size_medium">18sp</dimen>
     <dimen name="progress_bar_horizontal_margin">90dp</dimen>
+    <dimen name="switch_top_margin">30dp</dimen>
+    <dimen name="standard_margin">16dp</dimen>
+    <dimen name="main_preview_image">250dp</dimen>
 </resources>

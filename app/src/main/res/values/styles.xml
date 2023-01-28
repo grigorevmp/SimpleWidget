@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="YourAlertDialog.Button" parent="Widget.MaterialComponents.Button.TextButton">
         <item name="android:textColor">@color/material_dynamic_primary100</item>
         <item name="android:textSize">20sp</item>
@@ -7,6 +8,7 @@
         <item name="android:gravity">left</item>
         <item name="android:letterSpacing">0</item>
     </style>
+
     <style name="MultiChoiceAlertDialog" parent="Theme.MaterialComponents.Light.Dialog.Alert">
         <item name="buttonBarPositiveButtonStyle">@style/YourAlertDialog.Button</item>
         <item name="buttonBarNegativeButtonStyle">@style/YourAlertDialog.Button</item>
@@ -25,4 +27,20 @@
         <item name="colorControlNormal">@color/black</item>
         <item name="colorControlActivated">@color/purple_700</item>
     </style>
+
+    <!-- APIs Icons styles -->
+
+    <style name="IconCardView">
+        <item name="android:layout_width">60dp</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:layout_margin">10dp</item>
+        <item name="cardCornerRadius">30dp</item>
+    </style>
+
+    <style name="IconImageView">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
+
 </resources>
