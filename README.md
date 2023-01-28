@@ -13,10 +13,8 @@ Supported backgrounds:
 
 # Some screenshots 
 
-![alt text](https://github.com/grigorevmp/CatWidget/blob/master/Screens/1.jpg)
+<img src="https://github.com/grigorevmp/CatWidget/blob/master/Screens/1.jpg" width="30%">
+<img src="https://github.com/grigorevmp/CatWidget/blob/master/Screens/2.jpg" width="30%">
+<img src="https://github.com/grigorevmp/CatWidget/blob/master/Screens/3.jpg" width="30%">
+<img src="https://github.com/grigorevmp/CatWidget/blob/master/Screens/4.jpg" width="30%">
 
-![alt text](https://github.com/grigorevmp/CatWidget/blob/master/Screens/2.jpg)
-
-![alt text](https://github.com/grigorevmp/CatWidget/blob/master/Screens/3.jpg)
-
-![alt text](https://github.com/grigorevmp/CatWidget/blob/master/Screens/4.jpg)
