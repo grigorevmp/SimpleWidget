@@ -2,6 +2,10 @@
 Simple calendar widget app
 
 Google play: [Download](https://play.google.com/store/apps/details?id=com.grigorevmp.catwidget)
+RuStore: [Скачать](https://apps.rustore.ru/app/com.grigorevmp.catwidget)
 
-+ Cats
-+ Dogs
+Supported backgrounds:
++ Cats ^^
++ Dogs *woof*
++ Anime :3
+
