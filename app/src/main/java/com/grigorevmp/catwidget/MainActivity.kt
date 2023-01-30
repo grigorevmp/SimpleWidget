@@ -1,7 +1,6 @@
 package com.grigorevmp.catwidget
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -174,11 +173,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.cCategory.setOnClickListener {
-            showSortDialog(applicationContext)
+            showSortDialog()
         }
     }
 
-    private fun showSortDialog(context: Context) {
+    private fun showSortDialog() {
         val options: Array<CharSequence> = if (Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type) {
             AnimeImageService.ImageNsfwCategory.getValuesNames().toTypedArray()
         } else {
@@ -234,7 +233,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SimpleDateFormat")
     private fun getMonth(isFullMonth: Boolean): String {
         val sdf = if (isFullMonth) SimpleDateFormat("LLLL") else SimpleDateFormat("MMM")
-        return sdf.format(Date()).capitalize(Locale.ROOT)
+        return sdf.format(Date()).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
     }
 
     private fun getProgressBar(): CircularProgressDrawable {
@@ -309,7 +308,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private suspend fun getDog() {
-        dogImageService.getPicture(this).flowOn(Dispatchers.IO).catch { e ->
+        dogImageService.getPicture(this).flowOn(Dispatchers.IO).catch {
             withContext(Dispatchers.Main) {
                 showState(StateEnum.Error)
             }
@@ -384,7 +383,7 @@ class MainActivity : AppCompatActivity() {
 
     // Extensions
 
-    fun String.capitalized(): String {
+    private fun String.capitalized(): String {
         return this.replaceFirstChar {
             if (it.isLowerCase())
                 it.titlecase(Locale.getDefault())

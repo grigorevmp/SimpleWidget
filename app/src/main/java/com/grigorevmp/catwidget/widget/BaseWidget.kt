@@ -185,7 +185,7 @@ class BaseWidget : AppWidgetProvider() {
             if (isDog) {
                 dogImageService.getPicture(currentContext.applicationContext)
                     .flowOn(Dispatchers.IO)
-                    .catch { e ->
+                    .catch {
                         Log.e("GetDogImageUseCase", "Can't connect to the server")
                     }
                     .collect {

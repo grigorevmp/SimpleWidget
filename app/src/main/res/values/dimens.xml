@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="base_margin">20dp</dimen>
-    <dimen name="about_icon_size">100dp</dimen>
+    <dimen name="about_icon_size">104dp</dimen>
     <dimen name="about_small_icon_size">32dp</dimen>
-    <dimen name="about_x_small_icon_size">20dp</dimen>
     <dimen name="about_bottom_margin">30dp</dimen>
-    <dimen name="account_logo_size">70dp</dimen>
-    <dimen name="account_logo_radius_size">35dp</dimen>
-    <dimen name="fragment_title">24sp</dimen>
-    <dimen name="medium_margin">30dp</dimen>
-    <dimen name="small_margin">10dp</dimen>
-    <dimen name="text_base_margin">10dp</dimen>
+    <dimen name="small_margin">8dp</dimen>
+    <dimen name="standard_margin">16dp</dimen>
+    <dimen name="medium_margin">32dp</dimen>
+    <dimen name="huge_margin">64dp</dimen>
+    <dimen name="text_standard_margin">10dp</dimen>
     <dimen name="text_size_big">36sp</dimen>
     <dimen name="text_size_medium">18sp</dimen>
     <dimen name="progress_bar_horizontal_margin">90dp</dimen>
     <dimen name="switch_top_margin">30dp</dimen>
-    <dimen name="standard_margin">16dp</dimen>
     <dimen name="main_preview_image">250dp</dimen>
+    <dimen name="standard_corner_radius">16dp</dimen>
 </resources>

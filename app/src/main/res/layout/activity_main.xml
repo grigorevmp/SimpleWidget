@@ -8,7 +8,6 @@
     tools:context=".MainActivity">
 
     <ScrollView
-        android:id="@+id/screen_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -141,7 +140,6 @@
                 app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
             <TextView
-                android:id="@+id/tvDescription"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/standard_margin"
@@ -168,9 +166,9 @@
                     style="@style/IconCardView">
 
                     <ImageView
-                        android:id="@+id/ivCat"
                         style="@style/IconImageView"
-                        app:srcCompat="@drawable/cat_face" />
+                        app:srcCompat="@drawable/cat_face"
+                        android:importantForAccessibility="no" />
 
                 </androidx.cardview.widget.CardView>
 
@@ -179,9 +177,9 @@
                     style="@style/IconCardView">
 
                     <ImageView
-                        android:id="@+id/ivDog"
                         style="@style/IconImageView"
-                        app:srcCompat="@drawable/dog_face" />
+                        app:srcCompat="@drawable/dog_face"
+                        android:importantForAccessibility="no" />
 
                 </androidx.cardview.widget.CardView>
 
@@ -190,9 +188,9 @@
                     style="@style/IconCardView">
 
                     <ImageView
-                        android:id="@+id/ivAnime"
                         style="@style/IconImageView"
-                        app:srcCompat="@drawable/girl_face" />
+                        app:srcCompat="@drawable/girl_face"
+                        android:importantForAccessibility="no" />
 
                 </androidx.cardview.widget.CardView>
 
@@ -261,7 +259,6 @@
                 app:layout_constraintTop_toBottomOf="@+id/sOpenCalendar" />
 
             <TextView
-                android:id="@+id/tvOpenCalendar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/standard_margin"
@@ -320,11 +317,11 @@
                 android:id="@+id/fabInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/base_margin"
+                android:layout_marginTop="@dimen/standard_margin"
+                android:layout_marginRight="@dimen/standard_margin"
                 android:clickable="true"
                 android:contentDescription="@string/information"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvLoading"
                 app:srcCompat="@drawable/ic_outline_info" />
 

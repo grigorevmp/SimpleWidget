@@ -12,16 +12,16 @@
         android:layout_height="wrap_content"
         android:text="@string/cat_calendar_widget"
         android:textSize="25sp"
-        android:layout_marginTop="64dp"
+        android:layout_marginTop="@dimen/medium_margin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView2" />
+        app:layout_constraintTop_toBottomOf="@+id/about_icon" />
 
     <TextView
         android:id="@+id/tvSummary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="@dimen/small_margin"
         android:text="@string/one_cute_cat_a_day"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -31,7 +31,7 @@
         android:id="@+id/dogApi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="@dimen/medium_margin"
         android:text="@string/created_with_aws_random_dog"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,7 +41,7 @@
         android:id="@+id/catApi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="@dimen/small_margin"
         android:text="@string/created_with_aws_random_cat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,29 +51,30 @@
         android:id="@+id/animeApi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="@dimen/small_margin"
         android:text="@string/created_with_aws_random_anime"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/catApi" />
 
     <LinearLayout
-        android:id="@+id/llLinks"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/base_margin"
-        android:layout_marginEnd="@dimen/base_margin"
+        android:layout_marginBottom="@dimen/medium_margin"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintBottom_toTopOf="@+id/tvAuthor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/animeApi"
+        app:layout_constraintVertical_bias="1.0">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cvGitHub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/base_margin"
-            android:layout_marginStart="@dimen/base_margin"
-            app:cardCornerRadius="15dp"
+            android:layout_margin="@dimen/standard_margin"
+            android:layout_marginStart="@dimen/standard_margin"
+            app:cardCornerRadius="@dimen/standard_corner_radius"
             app:cardElevation="5dp"
             app:layout_constraintBottom_toBottomOf="@+id/social"
             app:layout_constraintStart_toStartOf="parent"
@@ -82,17 +83,17 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_margin="10dp"
+                android:layout_margin="@dimen/small_margin"
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/git"
                     android:layout_width="@dimen/about_small_icon_size"
                     android:layout_height="@dimen/about_small_icon_size"
                     android:layout_gravity="center"
                     android:layout_margin="@dimen/small_margin"
                     app:srcCompat="@drawable/github"
-                    app:tint="@color/white" />
+                    app:tint="@color/white"
+                    android:importantForAccessibility="no" />
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
@@ -101,10 +102,10 @@
             android:id="@+id/social"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/base_margin"
-            android:layout_marginEnd="@dimen/base_margin"
-            android:layout_marginBottom="@dimen/base_margin"
-            app:cardCornerRadius="15dp"
+            android:layout_marginTop="@dimen/standard_margin"
+            android:layout_marginEnd="@dimen/standard_margin"
+            android:layout_marginBottom="@dimen/standard_margin"
+            app:cardCornerRadius="@dimen/standard_corner_radius"
             app:cardElevation="5dp"
             app:layout_constraintBottom_toTopOf="@+id/author"
             app:layout_constraintEnd_toEndOf="parent"
@@ -122,7 +123,8 @@
                     android:layout_width="@dimen/about_small_icon_size"
                     android:layout_height="@dimen/about_small_icon_size"
                     android:layout_margin="@dimen/small_margin"
-                    app:srcCompat="@drawable/ic_contact_telegram" />
+                    app:srcCompat="@drawable/ic_contact_telegram"
+                    android:importantForAccessibility="no" />
 
             </LinearLayout>
 
@@ -131,13 +133,35 @@
     </LinearLayout>
 
     <ImageView
-        android:id="@+id/imageView2"
-        android:layout_width="128dp"
-        android:layout_height="128dp"
-        android:layout_marginTop="64dp"
+        android:id="@+id/about_icon"
+        android:layout_width="@dimen/about_icon_size"
+        android:layout_height="@dimen/about_icon_size"
+        android:layout_marginTop="@dimen/huge_margin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/launcher_icon" />
+        app:srcCompat="@drawable/launcher_icon"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/tvYear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/about_bottom_margin"
+        android:text="@string/version_and_year"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tvAuthor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/small_margin"
+        android:text="@string/app_author"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/tvYear"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
