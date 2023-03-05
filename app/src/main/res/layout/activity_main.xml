@@ -36,17 +36,6 @@
                     android:layout_height="wrap_content"
                     android:background="@color/black">
 
-                    <androidx.core.widget.ContentLoadingProgressBar
-                        android:id="@+id/pbLoading"
-                        style="?android:attr/progressBarStyleLarge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:visibility="visible"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
                     <ImageView
                         android:id="@+id/ivImagePreview"
                         android:layout_width="@dimen/main_preview_image"
@@ -113,6 +102,17 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/warnImage"
                         tools:visibility="visible" />
+
+                    <androidx.core.widget.ContentLoadingProgressBar
+                        android:id="@+id/pbLoading"
+                        style="?android:attr/progressBarStyleLarge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="visible"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -289,18 +289,6 @@
                 app:layout_constraintTop_toBottomOf="@+id/tvReload"
                 tools:visibility="visible" />
 
-            <TextView
-                android:id="@+id/tvLoading"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/standard_margin"
-                android:text="@string/i_need_more_time_to_load_cats"
-                android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tvDesc"
-                tools:visibility="visible" />
-
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/fabReload"
                 android:layout_width="wrap_content"
@@ -318,12 +306,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/standard_margin"
-                android:layout_marginRight="@dimen/standard_margin"
+                android:layout_marginEnd="@dimen/standard_margin"
                 android:clickable="true"
                 android:contentDescription="@string/information"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvLoading"
+                app:layout_constraintTop_toBottomOf="@id/tvDesc"
                 app:srcCompat="@drawable/ic_outline_info" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fabWeatherSetUp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/standard_margin"
+                android:layout_marginStart="@dimen/standard_margin"
+                android:clickable="true"
+                android:contentDescription="@string/information"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvDesc"
+                app:srcCompat="@drawable/ic_wb_sunny" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

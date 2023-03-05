@@ -195,7 +195,7 @@ class MainActivity : AppCompatActivity() {
             when (Preferences.pictureType) {
                 Utils.ImageTypeEnum.Dog.type -> getDog()
                 Utils.ImageTypeEnum.Cat.type -> getCat()
-                Utils.ImageTypeEnum.Anime.type -> getAnime(Preferences.animeImageType, Preferences.animeImageCategory)
+                Utils.ImageTypeEnum.Anime.type -> getAnime(Preferences.animeImageType)
             }
         }
     }
@@ -237,9 +237,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showErrorState() {
+        binding.pbLoading.hide()
+
         Utils.viewsGoneAndShow(
             viewsToGone = listOf(binding.tvTextMonth, binding.tvTextDay),
-            viewsToHide = listOf(binding.ivImagePreview),
+            viewsToHide = listOf(binding.ivImagePreview, binding.pbLoading),
             viewsToShow = listOf(binding.warnImage, binding.warnText),
         )
     }
@@ -250,7 +252,7 @@ class MainActivity : AppCompatActivity() {
         Utils.viewsGoneAndShow(
             viewsToGone = listOf(binding.warnImage, binding.warnText, binding.tvTextMonth, binding.tvTextDay),
             viewsToHide = listOf(binding.ivImagePreview),
-            viewsToShow = listOf(binding.tvLoading),
+            viewsToShow = listOf(binding.pbLoading),
         )
     }
 
@@ -258,7 +260,7 @@ class MainActivity : AppCompatActivity() {
         binding.pbLoading.hide()
 
         Utils.viewsGoneAndShow(
-            viewsToGone = listOf(binding.tvLoading, binding.warnImage, binding.warnText),
+            viewsToGone = listOf(binding.warnImage, binding.warnText),
             viewsToShow = listOf(binding.ivImagePreview, binding.tvTextDay, binding.tvTextMonth),
         )
 
@@ -303,8 +305,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private suspend fun getAnime(
-        type: String = AnimeImageService.AnimeTypeEnum.SFW.type,
-        category: String = AnimeImageService.ImageSfwCategory.Waifu.category
+        type: String = AnimeImageService.AnimeTypeEnum.SFW.type
     ) {
         vm.getPictureByTypeAndChangeState(
             this,

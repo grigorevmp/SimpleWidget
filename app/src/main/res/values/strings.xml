@@ -7,7 +7,6 @@
     <string name="created_with_aws_random_anime">Anime API: Images from \"api.waifu.pics\"</string>
     <string name="use_full_month">Show full month</string>
     <string name="random">Random</string>
-    <string name="i_need_more_time_to_load_cats">I need more time…</string>
     <string name="can_t_load_image"><![CDATA[Can\'t connect server \n Try again later :<]]></string>
     <string name="show_reload_in_widget">Update image on tap</string>
     <string name="reload_desc_1">Tap widget to sync with app</string>

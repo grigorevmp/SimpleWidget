@@ -7,7 +7,6 @@
     <string name="created_with_aws_random_anime">Anime API: Картинки из \"api.waifu.pics\"</string>
     <string name="use_full_month">Показать полное название месяца</string>
     <string name="random">Рандом</string>
-    <string name="i_need_more_time_to_load_cats">Нужно ещё подождать…</string>
     <string name="can_t_load_image"><![CDATA[Не могу достучаться до сервера \n Попробуй попозже :<]]></string>
     <string name="show_reload_in_widget">Обновлять картинку по нажатию</string>
     <string name="reload_desc_1">Нажмите на виджет для синка с приложением</string>
