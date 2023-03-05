@@ -1,16 +1,15 @@
 package com.grigorevmp.catwidget.data.network.anime
 
 import android.content.Context
-import com.grigorevmp.catwidget.data.dto.image.AnimeImageDto
 import com.grigorevmp.catwidget.data.network.BaseImageService
-import com.grigorevmp.catwidget.utils.Utils
+import com.grigorevmp.catwidget.utils.Preferences
 import kotlinx.coroutines.flow.flow
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class AnimeImageService : BaseImageService<AnimeImageDto>(
+class AnimeImageService : BaseImageService(
     baseUrl = "https://api.waifu.pics/sfw/megumin"
 ) {
     override fun getPicture(context: Context) = flow {
@@ -27,13 +26,12 @@ class AnimeImageService : BaseImageService<AnimeImageDto>(
 
         val service = loader.create(AnimeImageApi::class.java)
 
-        emit(service.getAnimePicture("waifu"))
+        emit(service.getAnimePicture(AnimeImageService.ImageSfwCategory.Waifu.category))
     }
 
     fun getCustomPicture(
         context: Context,
-        type: String = "sfw",
-        category: String = "waifu"
+        type: String = AnimeTypeEnum.SFW.type
     ) = flow {
         val okHttpClient = OkHttpClient().newBuilder()
         val cache = Cache(context.cacheDir, 4000)
@@ -41,7 +39,7 @@ class AnimeImageService : BaseImageService<AnimeImageDto>(
         okHttpClient.cache(cache).build()
 
         val loader = Retrofit.Builder()
-            .baseUrl("https://api.waifu.pics/${Utils.getAnimeType()}/")
+            .baseUrl("https://api.waifu.pics/${Preferences.animeImageType}/")
             .client(okHttpClient.cache(cache).build())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -49,15 +47,65 @@ class AnimeImageService : BaseImageService<AnimeImageDto>(
         val service = loader.create(AnimeImageApi::class.java)
 
         val animeCategory = when (type) {
-            AnimeTypeEnum.SFW.type -> Utils.getAnimeCategory()
-            AnimeTypeEnum.NSFW.type -> Utils.getAnimeRestrictedCategory()
-            else -> Utils.getAnimeCategory()
+            AnimeTypeEnum.SFW.type -> Preferences.animeImageCategory
+            AnimeTypeEnum.NSFW.type -> Preferences.animeImageRestrictedCategory
+            else -> Preferences.animeImageCategory
         }
 
-        animeCategory?.let {
-            emit(service.getAnimePicture(it))
-        } ?: emit(service.getAnimePicture(category))
+        emit(service.getAnimePicture(animeCategory))
 
+    }
+
+    override suspend fun getPictureFromWidget(context: Context, updateWidget: () -> Unit) {
+        val okHttpClient = OkHttpClient().newBuilder()
+        val cache = Cache(context.cacheDir, 4000)
+
+        okHttpClient.cache(cache).build()
+
+        val loader = Retrofit.Builder()
+            .baseUrl("https://api.waifu.pics/${Preferences.animeImageType}/")
+            .client(okHttpClient.cache(cache).build())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service = loader.create(AnimeImageApi::class.java)
+
+        val dogPicture = service.getAnimePicture(AnimeImageService.ImageSfwCategory.Waifu.category)
+
+        Preferences.pictureUrl = dogPicture.url
+
+        updateWidget()
+    }
+
+    suspend fun getPictureFromWidgetCustom(
+        context: Context,
+        type: String = AnimeTypeEnum.SFW.type,
+        updateWidget: () -> Unit
+    ) {
+        val okHttpClient = OkHttpClient().newBuilder()
+        val cache = Cache(context.cacheDir, 4000)
+
+        okHttpClient.cache(cache).build()
+
+        val loader = Retrofit.Builder()
+            .baseUrl("https://api.waifu.pics/${Preferences.animeImageType}/")
+            .client(okHttpClient.cache(cache).build())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service = loader.create(AnimeImageApi::class.java)
+
+        val animeCategory = when (type) {
+            AnimeTypeEnum.SFW.type -> Preferences.animeImageCategory
+            AnimeTypeEnum.NSFW.type -> Preferences.animeImageRestrictedCategory
+            else -> Preferences.animeImageCategory
+        }
+
+        val dogPicture = service.getAnimePicture(animeCategory)
+
+        Preferences.pictureUrl = dogPicture.url
+
+        updateWidget()
     }
 
     enum class AnimeTypeEnum(val type: String) {

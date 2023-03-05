@@ -5,5 +5,5 @@ import retrofit2.http.GET
 
 interface DogImageApi {
     @GET("random")
-    suspend  fun getDogPicture() : DogImageDto
+    suspend fun getDogPicture() : DogImageDto
 }

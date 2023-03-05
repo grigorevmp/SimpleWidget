@@ -5,5 +5,5 @@ import retrofit2.http.GET
 
 interface CatImageApi {
     @GET("meow")
-    suspend  fun getCatPicture() : CatImageDto
+    suspend fun getCatPicture() : CatImageDto
 }

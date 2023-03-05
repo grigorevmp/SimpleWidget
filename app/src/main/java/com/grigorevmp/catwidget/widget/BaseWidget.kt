@@ -21,14 +21,14 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.AppWidgetTarget
 import com.bumptech.glide.request.target.Target
 import com.grigorevmp.catwidget.R
+import com.grigorevmp.catwidget.data.network.anime.AnimeImageService
 import com.grigorevmp.catwidget.data.network.cat.CatImageService
 import com.grigorevmp.catwidget.data.network.dog.DogImageService
+import com.grigorevmp.catwidget.utils.Preferences
 import com.grigorevmp.catwidget.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -39,20 +39,20 @@ class BaseWidget : AppWidgetProvider() {
 
     private val dogImageService = DogImageService()
     private val catImageService = CatImageService()
+    private val animeImageService = AnimeImageService()
+
+
 
     override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
         super.onRestored(context, oldWidgetIds, newWidgetIds)
 
-        val appWidgetManager = AppWidgetManager.getInstance(context)
+        if (context == null) return
+        if (oldWidgetIds == null) return
 
-        if (oldWidgetIds != null) {
-            for (appWidgetId in oldWidgetIds) {
-                if (context != null) {
-                    if (appWidgetManager != null) {
-                        updateAppWidget(context, appWidgetManager, appWidgetId)
-                    }
-                }
-            }
+        val appWidgetManager = AppWidgetManager.getInstance(context) ?: return
+
+        for (appWidgetId in oldWidgetIds) {
+            updateAppWidget(context, appWidgetManager, appWidgetId)
         }
     }
 
@@ -63,21 +63,66 @@ class BaseWidget : AppWidgetProvider() {
     ) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
 
-        if (appWidgetIds != null) {
-            for (appWidgetId in appWidgetIds) {
-                if (context != null) {
-                    if (appWidgetManager != null) {
-                        updateAppWidget(context, appWidgetManager, appWidgetId)
-                    }
+        if (context == null) return
+        if (appWidgetIds == null) return
+        if (appWidgetManager == null) return
+
+        for (appWidgetId in appWidgetIds) {
+            updateAppWidget(context, appWidgetManager, appWidgetId)
+        }
+    }
+
+    override fun onReceive(context: Context?, intent: Intent) {
+        super.onReceive(context, intent)
+
+        val appWidgetManager = AppWidgetManager.getInstance(context) ?: return
+
+        if (context == null) return
+
+        when (intent.action) {
+            "FULL_UPDATE" -> {
+                callUpdate(context, intent, appWidgetManager, Preferences.pictureType)
+            }
+
+            "LOCAL_UPDATE" -> {
+                if (Preferences.openCalendarOnTap) {
+                    val calendarUri = CalendarContract.CONTENT_URI
+                        .buildUpon()
+                        .appendPath("time")
+                        .build()
+                    val localIntent = Intent(Intent.ACTION_VIEW, calendarUri)
+                    localIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.startActivity(localIntent)
                 }
+                val extras = intent.extras
+                val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID) ?: return
+
+                updateAppWidget(
+                    context,
+                    appWidgetManager,
+                    appWidgetId
+                )
+            }
+
+            else -> {
+                val extras = intent.extras
+                val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID) ?: return
+
+                updateAppWidget(
+                    context,
+                    appWidgetManager,
+                    appWidgetId
+                )
             }
         }
     }
 
+
+
     private fun getImage(context: Context, appWidgetId: Int) {
         val views = RemoteViews(context.packageName, R.layout.base_widget)
         views.setTextViewText(R.id.tvTextDay, getDay())
-        views.setTextViewText(R.id.tvTextMonth, getMonth(Utils.getMonthLong()))
+        views.setTextViewText(R.id.tvTextMonth, getMonth(Preferences.showFullMonth))
 
         val circularProgressDrawable = CircularProgressDrawable(context)
         circularProgressDrawable.strokeWidth = 5f
@@ -89,33 +134,35 @@ class BaseWidget : AppWidgetProvider() {
         views.setViewVisibility(R.id.pbLoading, View.GONE)
         views.setViewVisibility(R.id.ivImagePreview, View.VISIBLE)
 
-        Glide.with(context)
-            .asBitmap()
-            .load(Utils.getUrl())
-            .listener(object : RequestListener<Bitmap> {
-                override fun onLoadFailed(
-                    e: GlideException?,
-                    model: Any?,
-                    target: Target<Bitmap>?,
-                    isFirstResource: Boolean
-                ): Boolean {
-                    return false
-                }
+        GlobalScope.launch(Dispatchers.IO) {
+            Glide.with(context)
+                .asBitmap()
+                .load(Preferences.pictureUrl)
+                .listener(object : RequestListener<Bitmap> {
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Bitmap>?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        return false
+                    }
 
-                override fun onResourceReady(
-                    resource: Bitmap?,
-                    model: Any?,
-                    target: Target<Bitmap>?,
-                    dataSource: DataSource?,
-                    isFirstResource: Boolean
-                ): Boolean {
-                    return false
-                }
+                    override fun onResourceReady(
+                        resource: Bitmap?,
+                        model: Any?,
+                        target: Target<Bitmap>?,
+                        dataSource: DataSource?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        return false
+                    }
 
-            })
-            .placeholder(circularProgressDrawable)
-            .override(500, 500)
-            .into(appWidgetTarget)
+                })
+                .placeholder(circularProgressDrawable)
+                .override(500, 500)
+                .into(appWidgetTarget)
+        }
     }
 
     private fun updateAppWidget(
@@ -123,9 +170,9 @@ class BaseWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
     ) {
-
         val views = RemoteViews(context.packageName, R.layout.base_widget)
-        if (Utils.getReload()) {
+
+        if (Preferences.fullReloadOnTap) {
             views.setOnClickPendingIntent(
                 R.id.widget, getPendingSelfIntentFullUpdate(context, appWidgetId)
             )
@@ -134,7 +181,9 @@ class BaseWidget : AppWidgetProvider() {
                 R.id.widget, getPendingSelfIntent(context, appWidgetId)
             )
         }
+
         getImage(context, appWidgetId)
+
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
@@ -142,146 +191,103 @@ class BaseWidget : AppWidgetProvider() {
         context: Context,
         appWidgetId: Int
     ): PendingIntent {
-        // Toast.makeText(context, context.getString(R.string.syncing), Toast.LENGTH_SHORT).show()
-        val intent =
-            Intent(context, BaseWidget::class.java)
-        intent.action = "LOCAL_UPDATE"
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+        val intent = Intent(context, BaseWidget::class.java)
+            .setAction("LOCAL_UPDATE")
+            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+
         intent.data = Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME))
-        return PendingIntent.getBroadcast(
-            context, appWidgetId,
-            intent, FLAG_IMMUTABLE
-        )
+
+        return PendingIntent.getBroadcast(context, appWidgetId, intent, FLAG_IMMUTABLE)
     }
 
     private fun getPendingSelfIntentFullUpdate(
         context: Context,
         appWidgetId: Int
     ): PendingIntent {
-        // Toast.makeText(context, context.getString(R.string.updating), Toast.LENGTH_SHORT).show()
-        val intent =
-            Intent(context, BaseWidget::class.java)
-        intent.action = "FULL_UPDATE"
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+        val intent = Intent(context, BaseWidget::class.java)
+            .setAction("FULL_UPDATE")
+            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+
         intent.data = Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME))
-        return PendingIntent.getBroadcast(
-            context, appWidgetId,
-            intent, FLAG_IMMUTABLE
-        )
+
+        return PendingIntent.getBroadcast(context, appWidgetId, intent, FLAG_IMMUTABLE)
     }
 
     private fun callUpdate(
         context: Context?, intent: Intent,
         appWidgetManager: AppWidgetManager,
-        isDog: Boolean
+        type: String?
     ) {
         val currentContext = context ?: return
+
         val extras = intent.extras
-        val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID)
+        val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID) ?: return
 
-        CoroutineScope(SupervisorJob()).launch {
+        CoroutineScope(Dispatchers.IO).launch {
 
-            if (isDog) {
-                dogImageService.getPicture(currentContext.applicationContext)
-                    .flowOn(Dispatchers.IO)
-                    .catch {
-                        Log.e("GetDogImageUseCase", "Can't connect to the server")
-                    }
-                    .collect {
-                        Utils.setUrl(it.message)
-
-                        if (appWidgetId != null) {
-                            withContext(Dispatchers.Main) {
-                                updateAppWidget(
-                                    currentContext,
-                                    appWidgetManager,
-                                    appWidgetId
-                                )
-                            }
+            when (type) {
+                Utils.ImageTypeEnum.Dog.type -> dogImageService.getPictureFromWidget(
+                    currentContext.applicationContext
+                ) {
+                    launch {
+                        withContext(Dispatchers.Main){
+                            updateAppWidget(
+                                currentContext,
+                                appWidgetManager,
+                                appWidgetId
+                            )
                         }
                     }
-            } else {
-                catImageService.getPicture(currentContext.applicationContext)
-                    .flowOn(Dispatchers.IO)
-                    .catch { e ->
-                        Log.e("CatImageService", "Can't connect to the server")
-                    }
-                    .collect {
-                        Utils.setUrl(it.file)
-
-                        if (appWidgetId != null) {
-                            withContext(Dispatchers.Main) {
-                                updateAppWidget(
-                                    currentContext,
-                                    appWidgetManager,
-                                    appWidgetId
-                                )
-                            }
-                        }
-                    }
-            }
-        }
-    }
-
-    override fun onReceive(context: Context?, intent: Intent) {
-        super.onReceive(context, intent)
-
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-
-        if (intent.action == "FULL_UPDATE") {
-            callUpdate(context, intent, appWidgetManager, Utils.getImageType() == "dog")
-        } else if (intent.action == "LOCAL_UPDATE") {
-            if (Utils.getCalendar()) {
-                val calendarUri = CalendarContract.CONTENT_URI
-                    .buildUpon()
-                    .appendPath("time")
-                    .build()
-                val intent2 = Intent(Intent.ACTION_VIEW, calendarUri)
-                intent2.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                context?.startActivity(intent2)
-            }
-            val extras = intent.extras
-            val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID)
-
-            if (context != null) {
-                if (appWidgetId != null) {
-                    updateAppWidget(
-                        context,
-                        appWidgetManager,
-                        appWidgetId
-                    )
+                    Log.i("Widget", "Widget updated")
                 }
-            }
-        } else {
-            val extras = intent.extras
-            val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID)
 
-            if (context != null) {
-                if (appWidgetId != null) {
-                    updateAppWidget(
-                        context,
-                        appWidgetManager,
-                        appWidgetId
-                    )
+                Utils.ImageTypeEnum.Cat.type -> catImageService.getPictureFromWidget(
+                    currentContext.applicationContext
+                ) {
+                    launch {
+                        withContext(Dispatchers.Main){
+                            updateAppWidget(
+                                currentContext,
+                                appWidgetManager,
+                                appWidgetId
+                            )
+                        }
+                    }
+                    Log.i("Widget", "Widget updated")
+                }
+
+                Utils.ImageTypeEnum.Anime.type -> animeImageService.getPictureFromWidgetCustom(
+                    currentContext.applicationContext,
+                    Preferences.animeImageType,
+                ) {
+                    launch {
+                        withContext(Dispatchers.Main){
+                            updateAppWidget(
+                                currentContext,
+                                appWidgetManager,
+                                appWidgetId
+                            )
+                        }
+                    }
+                    Log.i("Widget", "Widget updated")
                 }
             }
         }
     }
 
     @SuppressLint("SimpleDateFormat")
-    fun getDay(): String {
+    private fun getDay(): String {
         val sdf = SimpleDateFormat("dd")
         return sdf.format(Date())
     }
 
     @SuppressLint("SimpleDateFormat")
-    fun getMonth(isFullMonth: Boolean): String {
+    private fun getMonth(isFullMonth: Boolean): String {
         val sdf =
             if (isFullMonth) SimpleDateFormat("LLLL")
             else SimpleDateFormat("MMM")
         return sdf.format(Date())
     }
-
 }
 

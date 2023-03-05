@@ -3,8 +3,7 @@ package com.grigorevmp.catwidget.utils
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import com.grigorevmp.catwidget.BuildConfig
-import com.grigorevmp.catwidget.data.network.anime.AnimeImageService
+import android.view.View
 
 object Utils {
 
@@ -17,87 +16,78 @@ object Utils {
     private var application: Application? = null
 
     private const val preferences_file = "quickPassPreference"
+    private const val UNSCALED_ICON_SIZE = 0.7f
+    private const val SCALED_ICON_SIZE = 1f
 
-    fun setSharedPreferences() {
+    fun initSharedPreferences() {
         sharedPreferences = application?.getSharedPreferences(
             preferences_file,
             Context.MODE_PRIVATE
         )
     }
 
-    fun setReload(isReload: Boolean) {
-        with(sharedPreferences!!.edit()) {
-            putBoolean("prefReload", isReload)
-            apply()
+    fun viewsGoneAndShow(
+        viewsToGone: List<View> = listOf(),
+        viewsToHide: List<View> = listOf(),
+        viewsToShow: List<View> = listOf()
+    ) {
+        for (view in viewsToGone) {
+            view.gone()
+        }
+
+        for (view in viewsToHide) {
+            view.hide()
+        }
+
+        for (view in viewsToShow) {
+            view.show()
         }
     }
 
-    fun setUrl(url: String) {
-        with(sharedPreferences!!.edit()) {
-            putString("prefUrl", url)
-            apply()
+    fun viewsScaleInOut(
+        viewsToScaleIn: List<View> = listOf(),
+        viewsToScaleOut: List<View> = listOf()
+    ) {
+        for (view in viewsToScaleIn) {
+            scaleView(view)
+        }
+
+        for (view in viewsToScaleOut) {
+            scaleView(view, true)
         }
     }
 
-    fun setImageType(type: String) {
-        with(sharedPreferences!!.edit()) {
-            putString("prefAnimal", type)
-            apply()
+
+
+    private fun scaleView(view: View, unscaled: Boolean = false) {
+        if (unscaled) {
+            view.animate().scaleX(UNSCALED_ICON_SIZE).scaleY(UNSCALED_ICON_SIZE)
+        } else {
+            view.animate().scaleX(SCALED_ICON_SIZE).scaleY(SCALED_ICON_SIZE)
         }
     }
 
-    fun setMonth(isLong: Boolean) {
-        with(sharedPreferences!!.edit()) {
-            putBoolean("prefMonth", isLong)
-            apply()
-        }
+
+
+    // Extensions
+
+    private fun View.gone() {
+        visibility = View.GONE
     }
 
-    fun setCalendar(openCal: Boolean) {
-        with(sharedPreferences!!.edit()) {
-            putBoolean("prefCalendar", openCal)
-            apply()
-        }
+    private fun View.hide() {
+        visibility = View.INVISIBLE
     }
 
-    fun setAnimeType(animeType: String) {
-        with(sharedPreferences!!.edit()) {
-            putString("prefAnimeType", animeType)
-            apply()
-        }
+    private fun View.show() {
+        visibility = View.VISIBLE
     }
 
-    fun setAnimeCategory(animeCategory: String) {
-        with(sharedPreferences!!.edit()) {
-            putString("prefAnimeCategory", animeCategory)
-            apply()
-        }
+
+
+
+
+    enum class ImageTypeEnum(val type: String) {
+        Cat("cat"), Dog("dog"), Anime("anime"),
     }
-
-    fun setAnimeRestrictedCategory(animeRestrictedCategory: String) {
-        with(sharedPreferences!!.edit()) {
-            putString("prefAnimeRestrictedCategory", animeRestrictedCategory)
-            apply()
-        }
-    }
-
-    fun getUrl() = sharedPreferences!!.getString("prefUrl", "")
-    fun getImageType() = sharedPreferences!!.getString("prefAnimal", "cat")
-    fun getMonthLong() = sharedPreferences!!.getBoolean("prefMonth", false)
-    fun getReload() = sharedPreferences!!.getBoolean("prefReload", false)
-    fun getCalendar() = sharedPreferences!!.getBoolean("prefCalendar", false)
-    fun getAnimeType(): String? {
-        return if (BuildConfig.showRestrictedContent) sharedPreferences!!.getString("prefAnimeType", AnimeImageService.AnimeTypeEnum.SFW.type)
-        else AnimeImageService.AnimeTypeEnum.SFW.type
-    }
-
-    fun getAnimeCategory() = sharedPreferences!!.getString(
-        "prefAnimeCategory",
-        AnimeImageService.ImageSfwCategory.Awoo.category
-    )
-
-    fun getAnimeRestrictedCategory() = sharedPreferences!!.getString(
-        "prefAnimeRestrictedCategory",
-        AnimeImageService.ImageNsfwCategory.Waifu.category
-    )
 }
