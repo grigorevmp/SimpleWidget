@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import com.bumptech.glide.Glide
@@ -15,51 +14,32 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.grigorevmp.catwidget.data.network.anime.AnimeImageService
-import com.grigorevmp.catwidget.data.network.cat.CatImageService
-import com.grigorevmp.catwidget.data.network.dog.DogImageService
 import com.grigorevmp.catwidget.databinding.ActivityMainBinding
+import com.grigorevmp.catwidget.utils.Preferences
 import com.grigorevmp.catwidget.utils.Utils
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
 
-    private val catImageService = CatImageService()
-    private val dogImageService = DogImageService()
-    private val animeImageService = AnimeImageService()
-
     private lateinit var binding: ActivityMainBinding
 
-    companion object {
-        const val UNSCALED_ICON_SIZE = 0.7f
-        const val SCALED_ICON_SIZE = 1f
-    }
+    private val vm = MainViewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
 
         reloadResolver()
-        initDate(Utils.getMonthLong())
+        initDate(Preferences.showFullMonth)
         initListeners()
-    }
-
-    private fun scaleView(view: View, unscaled: Boolean = false) {
-        if (unscaled) {
-            view.animate().scaleX(UNSCALED_ICON_SIZE).scaleY(UNSCALED_ICON_SIZE)
-        } else {
-            view.animate().scaleX(SCALED_ICON_SIZE).scaleY(SCALED_ICON_SIZE)
-        }
     }
 
     private fun initListeners() {
@@ -67,74 +47,80 @@ class MainActivity : AppCompatActivity() {
             reloadResolver()
         }
 
-        binding.sMonth.isChecked = Utils.getMonthLong()
-        binding.sReload.isChecked = Utils.getReload()
+        binding.sMonth.isChecked = Preferences.showFullMonth
+        binding.sReload.isChecked = Preferences.fullReloadOnTap
 
-        if (Utils.getCalendar()) {
+        if (Preferences.openCalendarOnTap) {
             binding.sOpenCalendar.isChecked = true
             binding.sReload.isChecked = false
-            Utils.setReload(false)
+            Preferences.fullReloadOnTap = false
         }
 
-        if (Utils.getReload()) {
+        if (Preferences.fullReloadOnTap) {
             binding.tvDesc.text = getString(R.string.reload_desc_2)
         }
 
-        when (Utils.getImageType()) {
-            ImageTypeEnum.Anime.type -> {
-                scaleView(binding.cvDog, true)
-                scaleView(binding.cvCat, true)
-                scaleView(binding.cvAnime)
+        when (Preferences.pictureType) {
+            Utils.ImageTypeEnum.Anime.type -> {
+                Utils.viewsScaleInOut(
+                    viewsToScaleIn = listOf(binding.cvAnime),
+                    viewsToScaleOut = listOf(binding.cvDog, binding.cvCat)
+                )
             }
 
-            ImageTypeEnum.Dog.type -> {
-                scaleView(binding.cvAnime, true)
-                scaleView(binding.cvCat, true)
-                scaleView(binding.cvDog)
+            Utils.ImageTypeEnum.Dog.type -> {
+                Utils.viewsScaleInOut(
+                    viewsToScaleIn = listOf(binding.cvDog),
+                    viewsToScaleOut = listOf(binding.cvAnime, binding.cvCat)
+                )
             }
 
-            ImageTypeEnum.Cat.type -> {
-                scaleView(binding.cvAnime, true)
-                scaleView(binding.cvDog, true)
-                scaleView(binding.cvCat)
+            Utils.ImageTypeEnum.Cat.type -> {
+                Utils.viewsScaleInOut(
+                    viewsToScaleIn = listOf(binding.cvCat),
+                    viewsToScaleOut = listOf(binding.cvAnime, binding.cvDog)
+                )
             }
         }
 
         binding.sOpenCalendar.setOnClickListener {
-            Utils.setCalendar(binding.sOpenCalendar.isChecked)
+            Preferences.openCalendarOnTap = binding.sOpenCalendar.isChecked
 
             if (binding.sOpenCalendar.isChecked) {
-                Utils.setReload(false)
+                Preferences.fullReloadOnTap = false
                 binding.sReload.isChecked = false
             }
         }
 
         binding.sMonth.setOnCheckedChangeListener { _, _ ->
-            Utils.setMonth(binding.sMonth.isChecked)
+            Preferences.showFullMonth = binding.sMonth.isChecked
             initDate(binding.sMonth.isChecked)
         }
 
         binding.cvCat.setOnClickListener {
-            scaleView(binding.cvDog, true)
-            scaleView(binding.cvAnime, true)
-            scaleView(binding.cvCat)
-            Utils.setImageType(ImageTypeEnum.Cat.type)
+            Utils.viewsScaleInOut(
+                viewsToScaleIn = listOf(binding.cvCat),
+                viewsToScaleOut = listOf(binding.cvAnime, binding.cvDog)
+            )
+            Preferences.pictureType = Utils.ImageTypeEnum.Cat.type
             reloadResolver()
         }
 
         binding.cvDog.setOnClickListener {
-            scaleView(binding.cvCat, true)
-            scaleView(binding.cvAnime, true)
-            scaleView(binding.cvDog)
-            Utils.setImageType(ImageTypeEnum.Dog.type)
+            Utils.viewsScaleInOut(
+                viewsToScaleIn = listOf(binding.cvDog),
+                viewsToScaleOut = listOf(binding.cvCat, binding.cvAnime)
+            )
+            Preferences.pictureType = Utils.ImageTypeEnum.Dog.type
             reloadResolver()
         }
 
         binding.cvAnime.setOnClickListener {
-            scaleView(binding.cvCat, true)
-            scaleView(binding.cvDog, true)
-            scaleView(binding.cvAnime)
-            Utils.setImageType(ImageTypeEnum.Anime.type)
+            Utils.viewsScaleInOut(
+                viewsToScaleIn = listOf(binding.cvAnime),
+                viewsToScaleOut = listOf(binding.cvCat, binding.cvDog)
+            )
+            Preferences.pictureType = Utils.ImageTypeEnum.Anime.type
             reloadResolver()
         }
 
@@ -145,11 +131,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.sReload.setOnCheckedChangeListener { _, _ ->
             if (binding.sReload.isChecked) {
-                Utils.setCalendar(false)
+                Preferences.openCalendarOnTap = false
                 binding.sOpenCalendar.isChecked = false
             }
 
-            Utils.setReload(binding.sReload.isChecked)
+            Preferences.fullReloadOnTap = binding.sReload.isChecked
             if (binding.sReload.isChecked) {
                 binding.tvDesc.text = getString(R.string.reload_desc_2)
             } else {
@@ -158,10 +144,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.cRestricted.isChecked =
-            Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type
+            Preferences.animeImageType == AnimeImageService.AnimeTypeEnum.NSFW.type
 
         binding.cRestricted.setOnCheckedChangeListener { _, isChecked ->
-            Utils.setAnimeType(
+            Preferences.animeImageType = (
                 if (isChecked) {
                     reloadResolver()
                     AnimeImageService.AnimeTypeEnum.NSFW.type
@@ -178,21 +164,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSortDialog() {
-        val options: Array<CharSequence> = if (Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type) {
+        val options: Array<CharSequence> = if (Preferences.animeImageType == AnimeImageService.AnimeTypeEnum.NSFW.type) {
             AnimeImageService.ImageNsfwCategory.getValuesNames().toTypedArray()
         } else {
             AnimeImageService.ImageSfwCategory.getValuesNames().toTypedArray()
         }
 
-        val selectedId = options.indexOf(Utils.getAnimeCategory() as CharSequence)
+        val selectedId = options.indexOf(Preferences.animeImageCategory as CharSequence)
 
         val builder2 = MaterialAlertDialogBuilder(this@MainActivity)
         builder2.setTitle(R.string.anime_categories)
         builder2.setSingleChoiceItems(options, selectedId) { dialog, which ->
-            if (Utils.getAnimeType() == AnimeImageService.AnimeTypeEnum.NSFW.type)
-                Utils.setAnimeRestrictedCategory(options[which].toString())
+            if (Preferences.animeImageType == AnimeImageService.AnimeTypeEnum.NSFW.type)
+                Preferences.animeImageRestrictedCategory = options[which].toString()
             else
-                Utils.setAnimeCategory(options[which].toString())
+                Preferences.animeImageCategory = options[which].toString()
             reloadResolver()
             dialog.cancel()
         }
@@ -206,15 +192,10 @@ class MainActivity : AppCompatActivity() {
         showState(StateEnum.Loading)
 
         CoroutineScope(SupervisorJob()).launch {
-            when (Utils.getImageType()) {
-                ImageTypeEnum.Dog.type -> getDog()
-                ImageTypeEnum.Cat.type -> getCat()
-                ImageTypeEnum.Anime.type ->
-                    Utils.getAnimeType()?.let { type ->
-                        Utils.getAnimeRestrictedCategory()?.let { category ->
-                            getAnime(type, category)
-                        }
-                    }
+            when (Preferences.pictureType) {
+                Utils.ImageTypeEnum.Dog.type -> getDog()
+                Utils.ImageTypeEnum.Cat.type -> getCat()
+                Utils.ImageTypeEnum.Anime.type -> getAnime(Preferences.animeImageType, Preferences.animeImageCategory)
             }
         }
     }
@@ -227,6 +208,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SimpleDateFormat")
     private fun getDay(): String {
         val sdf = SimpleDateFormat("dd")
+
         return sdf.format(Date()).capitalized()
     }
 
@@ -238,13 +220,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun getProgressBar(): CircularProgressDrawable {
         val circularProgressDrawable = CircularProgressDrawable(this)
+
         circularProgressDrawable.strokeWidth = 5f
         circularProgressDrawable.centerRadius = 30f
         circularProgressDrawable.start()
+
         return circularProgressDrawable
     }
 
-    private fun showState(state: StateEnum, mode: ImageTypeEnum = ImageTypeEnum.Cat) {
+    private fun showState(state: StateEnum, mode: Utils.ImageTypeEnum = Utils.ImageTypeEnum.Cat) {
         when (state) {
             StateEnum.Error -> showErrorState()
             StateEnum.Loading -> showLoadingState()
@@ -253,91 +237,85 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showErrorState() {
-        binding.tvTextMonth.visibility = View.GONE
-        binding.tvTextDay.visibility = View.GONE
-        binding.ivImagePreview.visibility = View.INVISIBLE
-        binding.warnImage.visibility = View.VISIBLE
-        binding.warnText.visibility = View.VISIBLE
+        Utils.viewsGoneAndShow(
+            viewsToGone = listOf(binding.tvTextMonth, binding.tvTextDay),
+            viewsToHide = listOf(binding.ivImagePreview),
+            viewsToShow = listOf(binding.warnImage, binding.warnText),
+        )
     }
 
     private fun showLoadingState() {
         binding.pbLoading.show()
-        binding.ivImagePreview.visibility = View.INVISIBLE
-        binding.warnImage.visibility = View.GONE
-        binding.warnText.visibility = View.GONE
-        binding.tvTextMonth.visibility = View.GONE
-        binding.tvTextDay.visibility = View.GONE
-        binding.tvLoading.visibility = View.VISIBLE
+
+        Utils.viewsGoneAndShow(
+            viewsToGone = listOf(binding.warnImage, binding.warnText, binding.tvTextMonth, binding.tvTextDay),
+            viewsToHide = listOf(binding.ivImagePreview),
+            viewsToShow = listOf(binding.tvLoading),
+        )
     }
 
-    private fun showSuccessState(mode: ImageTypeEnum) {
+    private fun showSuccessState(mode: Utils.ImageTypeEnum) {
         binding.pbLoading.hide()
-        binding.tvLoading.visibility = View.GONE
-        binding.warnImage.visibility = View.GONE
-        binding.warnText.visibility = View.GONE
-        binding.ivImagePreview.visibility = View.VISIBLE
-        binding.tvTextMonth.visibility = View.VISIBLE
-        binding.tvTextDay.visibility = View.VISIBLE
+
+        Utils.viewsGoneAndShow(
+            viewsToGone = listOf(binding.tvLoading, binding.warnImage, binding.warnText),
+            viewsToShow = listOf(binding.ivImagePreview, binding.tvTextDay, binding.tvTextMonth),
+        )
 
         when (mode) {
-            ImageTypeEnum.Anime -> {
-                binding.cCategory.visibility = View.VISIBLE
-                if (BuildConfig.showRestrictedContent) { binding.cRestricted.visibility = View.VISIBLE }
+            Utils.ImageTypeEnum.Anime -> {
+                Utils.viewsGoneAndShow(viewsToShow = listOf(binding.cCategory))
+                if (BuildConfig.showRestrictedContent) {
+                    Utils.viewsGoneAndShow(viewsToShow = listOf(binding.cRestricted))
+                }
             }
 
             else -> {
-                binding.cCategory.visibility = View.GONE
-                binding.cRestricted.visibility = View.GONE
+                Utils.viewsGoneAndShow(
+                    viewsToGone = listOf(binding.cCategory, binding.cRestricted),
+                )
             }
         }
     }
 
     private suspend fun getCat() {
-        catImageService.getPicture(this).flowOn(Dispatchers.IO).catch { _ ->
-            withContext(Dispatchers.Main) {
-                showState(StateEnum.Error)
+        vm.getPictureByTypeAndChangeState(
+            this,
+            MainViewModel.PictureType.Cat,
+            errorAction = { showState(StateEnum.Error) },
+            successAction = { file ->
+                showState(StateEnum.Success, Utils.ImageTypeEnum.Cat)
+                setImage(file)
             }
-        }.collect {
-            Utils.setUrl(it.file)
-
-            withContext(Dispatchers.Main) {
-                showState(StateEnum.Success, ImageTypeEnum.Cat)
-                setImage(it.file)
-            }
-        }
+        )
     }
 
     private suspend fun getDog() {
-        dogImageService.getPicture(this).flowOn(Dispatchers.IO).catch {
-            withContext(Dispatchers.Main) {
-                showState(StateEnum.Error)
+        vm.getPictureByTypeAndChangeState(
+            this,
+            MainViewModel.PictureType.Dog,
+            errorAction = { showState(StateEnum.Error) },
+            successAction = { file ->
+                showState(StateEnum.Success, Utils.ImageTypeEnum.Dog)
+                setImage(file)
             }
-        }.collect {
-            Utils.setUrl(it.message)
-
-            withContext(Dispatchers.Main) {
-                showState(StateEnum.Success, ImageTypeEnum.Dog)
-                setImage(it.message)
-            }
-        }
+        )
     }
 
     private suspend fun getAnime(
-        type: String = "sfw",
-        category: String = "waifu"
+        type: String = AnimeImageService.AnimeTypeEnum.SFW.type,
+        category: String = AnimeImageService.ImageSfwCategory.Waifu.category
     ) {
-        animeImageService.getCustomPicture(this, type, category).flowOn(Dispatchers.IO).catch { _ ->
-            withContext(Dispatchers.Main) {
-                showState(StateEnum.Error)
-            }
-        }.collect {
-            Utils.setUrl(it.url)
-
-            withContext(Dispatchers.Main) {
-                showState(StateEnum.Success, ImageTypeEnum.Anime)
-                setImage(it.url)
-            }
-        }
+        vm.getPictureByTypeAndChangeState(
+            this,
+            MainViewModel.PictureType.Anime,
+            errorAction = { showState(StateEnum.Error) },
+            successAction = { file ->
+                showState(StateEnum.Success, Utils.ImageTypeEnum.Anime)
+                setImage(file)
+            },
+            type
+        )
     }
 
     private fun setImage(imageUrl: String) {
@@ -369,12 +347,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    enum class ImageTypeEnum(val type: String) {
-        Cat("cat"), Dog("dog"), Anime("anime"),
-    }
-
-
-
     enum class StateEnum {
         Error, Loading, Success
     }
@@ -385,9 +357,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun String.capitalized(): String {
         return this.replaceFirstChar {
-            if (it.isLowerCase())
+            if (it.isLowerCase()) {
                 it.titlecase(Locale.getDefault())
-            else it.toString()
+            }
+            else {
+                it.toString()
+            }
         }
     }
 }
